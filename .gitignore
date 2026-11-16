@@ -1,0 +1,9 @@
+# build artifacts
+/cactus
+/cactus.exe
+*.test
+/dist/
+
+# generated at runtime
+*.idx
+*.part
