@@ -9,8 +9,9 @@ in, the same call comes out with the transcript. An image goes in, a
 structured description comes back. Every model runs on one `libcactus`
 shared library loaded with `dlopen`/`LoadLibrary` at runtime through
 [purego](https://github.com/ebitengine/purego) — the only third-party
-dependency — so `CGO_ENABLED=0` builds and cross-compilation work
-everywhere.
+dependency of the library itself (the companion CLI adds
+[urfave/cli](https://github.com/urfave/cli)) — so `CGO_ENABLED=0` builds
+and cross-compilation work everywhere.
 
 This library is a Go port of the [Cactus Compute Python
 reference](https://github.com/Cactus-Compute/cactus) (cactus on PyPI).
@@ -65,7 +66,8 @@ package-level calls for one-shot use (`needle.Run`, `needle.Complete`,
   the engine keeping a bounded conversation context and reporting its
   peak RAM on every turn.
 - **Self-contained** — the engine and the base weights are downloaded
-  once from the Hugging Face Hub into `~/.cache/cactus` and verified
+  once from the Hugging Face Hub into `~/.cache/cactus`
+  (`$XDG_CACHE_HOME/cactus` when set) and verified
   against pinned checksums; inference never touches the network.
 
 Runs natively on **Windows** (amd64, arm64), **Linux** (amd64, arm64 —
@@ -155,19 +157,21 @@ The full documentation lives in [`docs/`](docs/) and is organized by task
 | Install and run my first agent, understand the first-run download | [Getting started](docs/getting-started.md) |
 | Declare tools — struct tags, builders, raw JSON schemas, the full tag reference | [Building tools](docs/tools.md) |
 | Execute tool calls — `Run` vs `Complete`, one-shot package calls, feeding results back | [Tool calling](docs/tool-calling.md) |
-| Use a large catalogue — retrieval, the top-five window, persistent indexes | [Tool indexes](docs/tool-indexes.md) |
+| Use a large catalogue — how the whole toolset rides in the prompt, naming rules, the reserved index slot | [Tool indexes](docs/tool-indexes.md) |
 | Read everything a response carries — calls, confidence, validation, metrics | [Responses](docs/responses.md) |
 | Hold multi-turn conversations, supply system facts, manage several agents | [Conversations](docs/conversations.md) |
 | Turn unstructured text into typed structs | [Extraction](docs/extraction.md) |
+| Transcribe clips, stream a microphone, embed speech | [Speech (Whistle)](docs/speech.md) |
+| Describe images, read text, fill structured forms | [Vision (Mirage)](docs/vision.md) |
 | Run tuned weights (`.cact` archives) | [Tuned weights](docs/weights.md) |
 | Manage the engine — cache layout, offline devices, musl, environment variables | [Engine management](docs/engine.md) |
 | Use the `cactus` command-line tool | [CLI reference](docs/cli.md) |
 | Look up an exact signature | [API reference](docs/api.md) |
 | Build, test and release the library itself — CI, conventional commits, release binaries | [Development & releases](docs/development.md) |
 
-The speech and vision APIs are documented on the packages themselves:
-`go doc github.com/FlameInTheDark/cactus-go/whistle` and
-`go doc github.com/FlameInTheDark/cactus-go/mirage`, or on
+The speech and vision APIs are documented in their own guides —
+[Speech](docs/speech.md) and [Vision](docs/vision.md) — with the full
+symbol tables in the [API reference](docs/api.md) and on
 [pkg.go.dev](https://pkg.go.dev/github.com/FlameInTheDark/cactus-go).
 
 ## Examples
@@ -198,8 +202,8 @@ cactus.go         the core: package doc, SetThreads, Models, model bits
 version.go        Version, EngineGeneration, EngineVersion pins
 worker.go         worker-mode process hook (init)
 needle/           the text model: New, Complete, CompleteAudio, Run, Embed
-needle/oneshot.go package-level Run / Complete / CompleteAudio / Embed /
-                  Extract, the shared one-shot agent
+needle/oneshot.go package-level Run / Complete / CompleteAudio / Embed,
+                  the shared one-shot agent
 needle/options.go With* / Run* / Complete* / Extract* option functions
 needle/response.go Response, FunctionCall, Validation
 needle/tool.go    Tool, ToolFunc, NewTool builder, Handler
@@ -219,6 +223,7 @@ cmd/cactus/       the CLI (urfave/cli v3)
 examples/         weather, extraction, conversation, catalog, smart_home,
                   weights, voice, vision
 docs/             the documentation set
+ANALYSIS.md       the Python-reference porting notes (format, ABI, grammar)
 ```
 
 ## Testing

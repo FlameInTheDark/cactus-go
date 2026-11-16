@@ -22,11 +22,14 @@ agent, err := needle.New(
     needle.WithWeights("my_needle.cact"),
     needle.WithTools(tools),
 )
-speech, err := whistle.New(whistle.WithWeights("my_whistle.cact"))
-vision, err := mirage.New(mirage.WithWeights("my_mirage.cact"))
+speech := whistle.New(whistle.WithWeights("my_whistle.cact"))
+vision := mirage.New(mirage.WithWeights("my_mirage.cact"))
 ```
 
-Everything else works identically — `Run`, `Complete`, `CompleteAudio`,
+`needle.New` reports unreadable or mismatched archives immediately;
+`whistle.New` and `mirage.New` only normalize options — a bad archive
+surfaces as an error on the first call. Everything else works
+identically — `Run`, `Complete`, `CompleteAudio`,
 extraction, `Reset` — with the tuned weights driving
 generation. The [weights example](../examples/weights/main.go) is a
 complete program.
@@ -60,7 +63,7 @@ those weights forever. The library solves this with process isolation:
 
 1. `WithWeights` starts a **worker process** — a re-exec of *your own binary*.
 2. The child is started with a private `--cactus-worker <nonce>` argument
-   plus a matching `NEEDLE_GO_WORKER` environment value.
+   plus a matching `CACTUS_GO_WORKER` environment value.
 3. A package-level `init()` in cactus-go detects the handshake and takes
    the child over **before `main()` runs**, so applications never need to
    cooperate — importing the library is enough.
@@ -82,7 +85,7 @@ Consequences worth knowing:
   turn-taking constraints between tuned agents (contrast
   [Conversations: concurrency](conversations.md#concurrency-and-multiple-agents)).
 - **The nonce makes accidental activation impossible.** A stray
-  `NEEDLE_GO_WORKER` in the environment never hijacks a process: the argv
+  `CACTUS_GO_WORKER` in the environment never hijacks a process: the argv
   value must match too.
 - **Cancellation kills the child.** A cancelled `Run`/`Complete`
   propagates by terminating the worker — no zombie generation.

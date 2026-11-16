@@ -18,8 +18,7 @@ import (
 // DecodeArguments converts engine arguments into a typed struct, using
 // the same name mapping as ToolFunc handlers:
 //
-//	var args LightsArgs
-//	err := needle.DecodeArguments(r.FunctionCalls[0].Arguments, &args)
+//	args, err := needle.DecodeArguments[LightsArgs](r.FunctionCalls[0].Arguments)
 func DecodeArguments[A any](arguments map[string]any) (A, error) {
 	return decodeArguments[A](arguments)
 }

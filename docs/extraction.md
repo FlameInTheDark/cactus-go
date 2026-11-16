@@ -42,6 +42,9 @@ Behavior:
 
 - Returns `*Invoice` — or **nil when nothing matched** (no error). A record
   must be *evidenced* in the text; absence is a valid outcome, not a failure.
+- A call the engine **withheld into `suppressed_calls`** still yields the
+  record — extraction reads it back exactly like the Python reference, so a
+  below-floor extraction surfaces for review instead of vanishing.
 - Fields follow the same optionality rules as tools: pointer fields are
   optional, plain fields are required, `Arguments`-style re-keying maps
   `due_date` onto `DueDate`.
@@ -88,6 +91,7 @@ where the shape lives in data, not Go types.
 | `ExtractStrict(false)` | strict | Return ungrounded values instead of raising (see below). |
 | `ExtractWeights(path)` | — | Extract against a tuned `.cact` archive. |
 | `ExtractEnginePath(path)` | — | Pin the engine library (see [Engine management](engine.md)). |
+| `ExtractLogger(logger)` | — | `*slog.Logger` for the extraction agent's startup and turns. |
 
 ## Strict mode
 

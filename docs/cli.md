@@ -176,10 +176,9 @@ cactus run --tools tools.json --weights my.cact --prompt "..."
 cactus run --tools tools.json --system "date: 2026-09-11 Fri 10:30" --prompt "..."
 ```
 
-Output, without `--json`:
+Output, without `--json`, for a text prompt:
 
 ```
-heard      "what's it like in Lagos right now?"
 call       get_weather
 arguments  {
   "city": "Lagos"
@@ -188,8 +187,9 @@ confidence 0.9387
 reasoning  'Lagos' -> city
 ```
 
-A refusal prints `response   type=call (no call: off-topic, unsupported, or
-negated)` — see [Responses: the refusal contract](responses.md#the-refusal-contract).
+An `--audio` run prints what was heard on a `heard` line first; a refusal
+prints `response   type=call (no call: off-topic, unsupported, or negated)`
+— see [Responses: the refusal contract](responses.md#the-refusal-contract).
 
 ## `transcribe`
 
@@ -229,7 +229,7 @@ cactus describe [command options] <image.png>
 | `--language CODE` | engine default | Output language, e.g. `en`. |
 | `--keywords LIST` | — | Comma-separated words and phrases to favour. |
 | `--weights FILE` | base model | Tuned `mirage.cact` to run. |
-| `--json` | off | Print the raw result as JSON. |
+| `--json` | on | Print the raw result as JSON (the command always prints JSON; the flag is accepted for symmetry with the other commands). |
 | `--timeout DURATION` | 5m | Overall time limit. |
 
 Without `--form` the command prints a structured description; with it, the
@@ -240,7 +240,8 @@ their EXIF orientation).
 
 ```sh
 cactus version
-# cactus-go 0.5.0 (engine 4.1.1)
+# cactus-go 0.5.1 (Cactus engine 4.1.1)
+# models: needle3, whistle, mirage
 ```
 
 Reports the library version and the pinned engine build it targets.

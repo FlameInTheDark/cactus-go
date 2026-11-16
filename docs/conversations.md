@@ -8,6 +8,7 @@ several agents side by side.
 - [Multi-turn conversations](#multi-turn-conversations)
 - [System facts](#system-facts)
 - [Reset](#reset)
+- [Stateless agents](#stateless-agents)
 - [Concurrency and multiple agents](#concurrency-and-multiple-agents)
 - [Context cancellation](#context-cancellation)
 
@@ -102,6 +103,30 @@ Use it when one agent serves many independent requests in a row (a request
 handler processing queued jobs, or the acceptance-suite loop in
 [smart_home](../examples/smart_home/main.go), which resets between test
 cases).
+
+Forgetting to reset has a cost: every prior turn stays in the conversation, so
+unrelated queries lose accuracy and confidence. After four queries without a
+`Reset`, an agent constructed with `WithLogger` warns about exactly that
+("…queries on this agent without Reset…").
+
+## Stateless agents
+
+When every query is independent by construction, let the agent do the
+resetting: `WithStateless(true)` rewinds the conversation before every
+`Complete`, `CompleteAudio` and `Run` call, so each query is answered from a
+fresh context — no `Reset` bookkeeping, no warning:
+
+```go
+agent, _ := needle.New(
+    needle.WithTools(tools),
+    needle.WithStateless(true),   // every query independent
+)
+```
+
+This is the semantics the package-level one-shot calls
+([Tool calling](tool-calling.md#one-shot-package-calls)) and extraction run
+under — the shared one-shot agent is stateless. A stateful agent remains the
+right choice for real conversations.
 
 ## Concurrency and multiple agents
 

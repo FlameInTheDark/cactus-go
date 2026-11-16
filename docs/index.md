@@ -25,16 +25,23 @@ organized so you can jump straight to the page that answers your question.
 | Page | What it covers |
 | --- | --- |
 | [Responses](responses.md) | Every field of the response envelope, the refusal contract, confidence semantics and gating, validation (ungrounded arguments, negation, temporal grounding), performance metrics. |
-| [Conversations](conversations.md) | Multi-turn conversations, system facts, `Reset`, multiple agents and concurrency rules, context cancellation. |
+| [Conversations](conversations.md) | Multi-turn conversations, system facts, `Reset`, stateless agents, multiple agents and concurrency rules, context cancellation. |
 | [Extraction](extraction.md) | Turning unstructured text into typed structs: `Extract`, `ExtractAs`, `ExtractRaw`, strict mode and its error contract. |
 | [Tuned weights](weights.md) | Running `.cact` archives, the worker process architecture, format tags and confidence heads, downloading published archives. |
+
+### Speech and vision
+
+| Page | What it covers |
+| --- | --- |
+| [Speech (Whistle)](speech.md) | Transcribing clips, languages and detection, keywords, word timestamps, live streaming, speech embeddings, audio input formats, tuned speech weights. |
+| [Vision (Mirage)](vision.md) | Describing images, sections and fields, thresholds, OCR and masks, filling structured forms, image input formats (EXIF, `RGB`), tuned vision weights. |
 
 ### Runtime and operations
 
 | Page | What it covers |
 | --- | --- |
 | [Engine management](engine.md) | Where the engine lives and how it is found, the cache layout, pre-seeding offline devices, musl/Alpine, platform support matrix, every environment variable. |
-| [CLI reference](cli.md) | The `cactus` command-line tool: installing a prebuilt binary or building it, `fetch`, `download`, `run`, `version`, all flags with examples. |
+| [CLI reference](cli.md) | The `cactus` command-line tool: installing a prebuilt binary or building it, `fetch`, `download`, `run`, `transcribe`, `describe`, `version`, all flags with examples. |
 | [API reference](api.md) | Every exported symbol of the `cactus` core and the `cactus/needle`, `cactus/whistle`, `cactus/mirage`, `cactus/fetch` packages. |
 | [Development & releases](development.md) | Building from source, the three test layers, the CI workflows, conventional commits, how releases and CLI binaries are produced. |
 
@@ -51,6 +58,14 @@ the whole catalogue rides in the prompt, and naming keeps it accurate.
 
 **I need typed structs out of raw text, not tool calls.** That is
 [Extraction](extraction.md) — it is tool calling with exactly one schema.
+
+**I have a WAV file / a microphone stream.** [Speech (Whistle)](speech.md)
+covers one-shot transcription and live streaming; speech-driven tool calls
+live in [Tool calling](tool-calling.md#speech-driven-turns).
+
+**I need to read text or fill a form from an image.** That is Mirage:
+[OCR and masks](vision.md#ocr-and-masks) and
+[filling forms](vision.md#filling-forms).
 
 **I want to ship an offline device.** [Engine management](engine.md#air-gapped--offline-devices)
 covers pre-seeding the cache and `HF_HUB_OFFLINE`.

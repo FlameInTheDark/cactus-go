@@ -13,8 +13,9 @@ questions the engine asks:
 There are three equivalent ways to declare tools, from most to least
 Go-idiomatic. They can be freely mixed in one toolset.
 
-- [`ToolFunc` — typed tools with struct tags](#typed-tools-with-struct-tags)
+- [Typed tools with struct tags](#typed-tools-with-struct-tags)
 - [`NewTool` — dynamic tools with builders](#dynamic-tools-with-builders)
+- [Trigger patterns](#trigger-patterns)
 - [Raw JSON schemas](#raw-json-schemas)
 - [The tag reference](#the-tag-reference)
 - [Go types to JSON types](#go-types-to-json-types)
@@ -126,6 +127,28 @@ the struct tags in the [tag reference](#the-tag-reference) below.
 `required` array (deterministically sorted; struct-tag schemas keep declaration
 order). `RawParams(schema map[string]any)` attaches a hand-written parameters
 object instead, and `Build()` freezes the tool.
+
+## Trigger patterns
+
+A tool may carry **trigger patterns** — case-insensitive regular expressions
+that route a matching request to that tool and require a call. A triggered
+call ships even below the confidence floor, which makes triggers the escape
+hatch for inputs the model would otherwise withhold into
+`SuppressedCalls` (see [Responses](responses.md#validation-grounding)):
+
+```go
+emergencyStop := needle.NewTool("emergency_stop",
+    "Halt every appliance immediately.").
+    Triggers(`(?i)\bemergency\b`, `(?i)\bstop everything\b`).
+    Build()
+```
+
+The patterns ride in the tool's schema as a `"triggers": [...]` key (after
+`parameters`), so they reach the engine exactly as they do in the Python
+reference, and matching happens engine-side before the confidence gate is
+applied. Use them sparingly: a trigger forces a call on every match, so a
+pattern that is too broad overrides the model's own judgment on
+similar-but-different requests.
 
 ## Raw JSON schemas
 

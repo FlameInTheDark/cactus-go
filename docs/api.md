@@ -145,7 +145,8 @@ vec, err := needle.Embed(ctx, "a red umbrella")
 
 Sharing: one shared agent serves all one-shot calls (the `Extract` family
 included), keyed by everything that configures the engine session —
-toolset, system facts, weights, engine path, buffer, logger. A call with
+toolset, system facts, weights, engine path, tool-index path, buffer,
+stateless flag, logger. A call with
 the same identity reuses it; a call with a new identity closes the previous
 agent and initializes a fresh one, exactly as the Python reference's
 `extract()` shares its agent. Alternating identities therefore
@@ -183,6 +184,7 @@ toolset, construct a `Needle` instead.
 | `ExtractStrict(false)` | `Extract*` | Return ungrounded values instead of raising (default strict). |
 | `ExtractWeights(path)` | `Extract*` | Extract against a tuned `.cact`. |
 | `ExtractEnginePath(path)` | `Extract*` | Pin the engine library. |
+| `ExtractLogger(logger)` | `Extract*` | Debug logging for the one-shot extraction agent. |
 
 ### Response types
 
@@ -194,7 +196,7 @@ type Response struct {
     ErrorCode       *string
     Reason          *string
     FunctionCalls   []FunctionCall
-    SuppressedCalls []FunctionCall  // withheld by the engine's grounding gate
+    SuppressedCalls []FunctionCall  // withheld: confidence below 0.1 or a grounding gate fired
     AudioText       *string         // transcript of an audio-driven turn
     Reasoning       *string
     Confidence      *float64        // nil = uncalibrated
@@ -258,6 +260,7 @@ Dynamic builder:
 | `Params(props map[string]Property)` | Parameters from named properties (required collected from `IsRequired`). |
 | `RawParams(schema map[string]any)` | Parameters from a hand-written JSON-Schema object. |
 | `Handler(fn Handler)` | Attaches a dynamic handler over the raw argument map. |
+| `Triggers(patterns ...string)` | Case-insensitive regexes that route a matching request to this tool and require a call; a triggered call ships even below the confidence floor (shipped as a `"triggers"` schema key). |
 | `Build() *Tool` | Freezes the tool. |
 
 `*Tool` methods:
@@ -367,6 +370,36 @@ Italian, Dutch and Polish.
 
 Transcription options: `WithLanguage`, `WithKeywords`, `WordTimestamps`.
 
+Result types:
+
+```go
+type Word struct {          // one transcribed word
+    Word        string      // the word
+    Start, End  float64     // seconds from the start of the clip/stream
+    Probability float64
+}
+
+type Transcription struct { // one transcription pass
+    Text      string        // silence yields ""
+    Language  string        // detected, or the forced code
+    TTFTMS    float64       // time to first token
+    DecodeTPS float64       // decode throughput
+    Words     []Word        // only when WordTimestamps was set
+}
+
+type StreamStep struct {    // one live-transcription update
+    Text     string         // words this chunk committed; join steps with a space
+    Words    []Word         // timings relative to the stream start
+    Pending  string         // unconfirmed tail
+    Language string
+    Received float64        // seconds of audio received so far
+    PassMS   float64        // milliseconds this pass took
+}
+```
+
+The [Speech](speech.md) guide covers transcription, streaming and embeddings
+end to end.
+
 ## package cactus/mirage
 
 Vision on the shared engine: description, OCR, object detection with masks,
@@ -380,6 +413,21 @@ and structured form filling.
 | `(*Mirage).Weights() string` | The weights archive in use (resolved after the first call). |
 | `ToRGB(input) (*RGB, error)` | Converts a path, PNG/JPEG/GIF bytes, `image.Image` or `mirage.RGB` into packed RGB. |
 | `Describe`, `Extract` | Package-level forms bound to the shared default model. |
+
+Image inputs and the `RGB` type:
+
+```go
+type RGB struct {           // packed 8-bit image data
+    Width, Height int
+    Data          []byte    // Width*Height*3 bytes, row-major
+}
+```
+
+Every vision input is normalized through `ToRGB`: a file path (PNG, JPEG,
+GIF — JPEGs auto-rotate by their EXIF orientation), encoded bytes of the
+same formats, a Go `image.Image`, or a ready `*RGB`. Pass `*RGB` when you
+already hold decoded pixels to skip a re-decode. The [Vision](vision.md)
+guide covers description, OCR and forms end to end.
 
 Describe options: `WithSections`, `WithFields`, `WithConf`, `WithTextConf`,
 `WithMaxObjects`, `WithMaxTextLines`, `WithMaxTokens`, `WithMaskFormat`,
@@ -412,12 +460,18 @@ proxy variables.
 | `LibNameForTag(tag string) string` | Library file name inside a wheel built for the given platform tag. |
 | `EngineRepo` / `EngineVersion` | The pinned Hub repository (`Cactus-Compute/cactus`) and build version. |
 | `EngineRevision`, `ManifestSHA256` | The pinned release commit and manifest checksum. |
+| `EngineReleaseDir` | The release directory inside the Hub repository (`releases/<version>`). |
 | `ModelRepos`, `ModelRevisions`, `ModelSHA256` | The per-model pins behind `WeightsPath`. |
+| `BaseWeights` | Archive file name of each model inside its repository (`needle3.cact`, ...). |
+| `WeightsEnv` | Model key → weights-path environment variable (`CACTUS_NEEDLE_WEIGHTS`, ...). |
+| `WheelTags` | The wheel platform tags a library download can pick from. |
 | `Platforms` | The list of standalone-runner platform folders. |
 | `ValidModel(key)` / `CheckModel(key)` | Whether a model key is fetchable, with a friendly error otherwise. |
 | `Endpoint() string` | Active Hub endpoint (honors `HF_ENDPOINT`). |
+| `DefaultEndpoint` | The default Hub endpoint constant (`https://huggingface.co`). |
 | `Offline() bool` | Whether `HF_HUB_OFFLINE` is set. |
-| `ProgressHook ProgressFunc` | Optional `func(label string, total, done int64)` progress callback, invoked during downloads. |
+| `ProgressHook ProgressFunc` | Optional progress callback, invoked during downloads. |
+| `ProgressFunc` | `func(label string, total, done int64)`; `total` is -1 without a content length. |
 | `UserAgent` | The HTTP user agent (override before first use if you like). |
 
 ## cmd/cactus
@@ -426,8 +480,8 @@ proxy variables.
 cactus fetch    [--out DIR] [--platform-tag TAG]
 cactus download <needle3 | whistle | mirage | platform | org/repo[/file].cact> [--out DIR]
 cactus run      [--prompt TEXT] [--audio FILE] [--language CODE] [--keywords LIST] [--tools FILE] [--system TEXT] [--weights FILE] [--max N] [--json] [--timeout D]
-cactus transcribe [--language CODE] [--keywords LIST] [--word-timestamps] [--weights FILE] [--json] <clip.wav>
-cactus describe [--sections LIST] [--fields LIST] [--conf N] [--form FILE] [--language CODE] [--keywords LIST] [--weights FILE] [--json] <image.png>
+cactus transcribe [--language CODE] [--keywords LIST] [--word-timestamps] [--weights FILE] [--json] [--timeout D] <clip.wav>
+cactus describe [--sections LIST] [--fields LIST] [--conf N] [--form FILE] [--language CODE] [--keywords LIST] [--weights FILE] [--json] [--timeout D] <image.png>
 cactus version
 ```
 

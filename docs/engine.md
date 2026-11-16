@@ -27,12 +27,12 @@ time — it calls `dlopen`/`LoadLibrary` at runtime through
 `CGO_ENABLED=0` builds work and cross-compiling from any host is a plain
 `GOOS=windows go build`.
 
-The C surface is the published `cactus.h`: fourteen symbols
+The C surface is the published `cactus.h`: thirteen symbols
 (`cactus_load`, `cactus_models`, `cactus_last_error`, `cactus_init`,
 `cactus_complete`, `cactus_set_audio`, `cactus_set_threads`,
 `cactus_reset`, `cactus_transcribe`,
 `cactus_stream_transcribe_process`, `cactus_stream_transcribe_stop`,
-`cactus_describe`, `cactus_embed`, and the error helper) — all of them
+`cactus_describe`, `cactus_embed`) — all of them
 bound and called from Go, no cgo anywhere.
 
 Because the engine keeps global state, every call is serialized through
@@ -66,6 +66,9 @@ Weights resolve the same way per model: `CACTUS_NEEDLE_WEIGHTS`,
 [Tuned weights](weights.md) for running custom archives.
 
 ## The cache layout
+
+The cache root is `~/.cache/cactus` (`%USERPROFILE%\.cache\cactus` on
+Windows), or `$XDG_CACHE_HOME/cactus` when `XDG_CACHE_HOME` is set:
 
 ```
 ~/.cache/cactus/
@@ -188,6 +191,7 @@ mirage packages take the same option, and `Extract` takes
 | `CACTUS_NEEDLE_WEIGHTS` | Pin the Needle 3 weights archive. |
 | `CACTUS_WHISTLE_WEIGHTS` | Pin the Whistle weights archive. |
 | `CACTUS_MIRAGE_WEIGHTS` | Pin the Mirage weights archive. |
+| `XDG_CACHE_HOME` | Move the whole cache (engine + weights) to `$XDG_CACHE_HOME/cactus`. |
 | `HF_HUB_OFFLINE=1` | Never download; fail fast when something is missing. |
 | `HF_ENDPOINT` | Use a different Hub endpoint (e.g. `https://hf-mirror.com`). |
 | `HTTP(S)_PROXY` | Honored by the Go HTTP stack for downloads. |

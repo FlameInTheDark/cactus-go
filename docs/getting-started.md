@@ -137,7 +137,8 @@ Build and run the CLI that ships with the repository:
 
 ```sh
 go run ./cmd/cactus version
-# cactus-go 0.5.0 (engine 4.1.1)
+# cactus-go 0.5.1 (Cactus engine 4.1.1)
+# models: needle3, whistle, mirage
 
 go run ./cmd/cactus run --prompt "what's it like in Lagos right now?"
 ```

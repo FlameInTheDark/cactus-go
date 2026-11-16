@@ -18,7 +18,8 @@ selected per query. Needle 2's retrieval head lives on the legacy branch
   change which one the model picks.
 - **Cost grows with the catalogue.** Every turn prefills every schema, so
   a 40-tool catalogue pays 40 schemas of prefill on every query — watch
-  `PrefillTPS` and `PrefixTokens` on the response.
+  `PrefillTPS` on the response and `agent.PrefixTokens()` (the prompt
+  prefix size observed at session init) once the agent has run a turn.
 - **The grammar still covers everything.** Constrained decoding compiles
   over the full toolset, so any declared tool is reachable on any turn —
   and a call is always schema-valid whichever tool it names.

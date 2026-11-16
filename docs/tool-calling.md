@@ -132,8 +132,8 @@ schema names land on Go field names — so one line gives you a typed value:
 ```go
 call := resp.FirstCall()
 
-var args SetLightsArgs
-if err := needle.DecodeArguments[SetLightsArgs](call.Arguments); err != nil {
+args, err := needle.DecodeArguments[SetLightsArgs](call.Arguments)
+if err != nil {
     // the call violated your struct; impossible when tags and schema match
 }
 
@@ -302,7 +302,7 @@ agent the call runs on; the loop options above tune it. One shared agent
 serves all one-shot calls — repeated calls with the same toolset reuse the
 same engine session, a changed toolset re-initializes. Alternating
 identities therefore re-initializes on each switch; for repeated
-multi-turn work on one toolset, construct an `Needle` with `New` and keep
+multi-turn work on one toolset, construct a `Needle` with `New` and keep
 it. Full rules: [One-shot calls](api.md#one-shot-calls).
 
 ## Where to go next

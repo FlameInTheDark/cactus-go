@@ -8,7 +8,7 @@ package cactus
 //	go build -ldflags "-X github.com/FlameInTheDark/cactus-go.Version=v1.2.3" ./cmd/cactus
 //
 // Builds made straight from source report the fallback value below.
-var Version = "0.5.0"
+var Version = "0.5.1"
 
 // EngineGeneration is the engine generation this package targets. The
 // base model shipped with generation 3 weights is the Needle 3

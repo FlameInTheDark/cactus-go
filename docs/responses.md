@@ -45,7 +45,7 @@ you will use in production: confidence and validation.
 | `Error`, `ErrorCode` | Engine-level error message/code, or nil. |
 | `Reason` | Short engine-level refusal reason, or nil. |
 | `FunctionCalls` | The calls the model wants executed this turn. Grammar-constrained decoding guarantees the arguments match the declared schema. |
-| `SuppressedCalls` | A call the engine withheld (confidence below the gate or a grounding gate fired); `FunctionCalls` is then empty. Show it to the user to confirm, or treat the turn as a refusal. |
+| `SuppressedCalls` | A call the engine withheld (confidence below 0.1 or a grounding gate fired); `FunctionCalls` is then empty. Show it to the user to confirm, or treat the turn as a refusal. |
 | `AudioText` | The transcript of an audio-driven turn, so callers can show what was heard next to the calls it produced. |
 | `Reasoning` | The model's short unconstrained derivation of each argument from its source span — read it to understand *why* an argument got its value. |
 | `Confidence` | Calibrated score in `[0,1]`, or nil when the running archive carries no trained confidence head. |
@@ -79,6 +79,7 @@ if room, ok := call.Arguments["room"].(string); ok {
 | --- | --- |
 | `HasCalls() bool` | At least one requested call. |
 | `FirstCall() *FunctionCall` | First call, or nil (the refusal case). |
+| `FirstCallOrSuppressed() *FunctionCall` | First requested call, falling back to the first suppressed one when the engine withheld every call — useful for "show what it wanted to do" UX. |
 | `Refused() bool` | No calls — off-topic, unsupported, ambiguous or negated input. |
 | `UngroundedOf(tool string) []string` | Ungrounded argument paths reported for that tool's calls. |
 | `String() string` | Compact JSON of the whole envelope. |
