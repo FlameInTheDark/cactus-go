@@ -49,13 +49,13 @@ jobs:
           go-version-file: go.mod
 
       # Pure Go, CGO disabled: every target cross-compiles from the Linux
-      # runner. The -X flag stamps the release tag into needle.Version, so
-      # `needle --version` on a shipped binary reports its release.
+      # runner. The -X flag stamps the release tag into cactus.Version, so
+      # `cactus version` on a shipped binary reports its release.
       - name: Build every platform
         run: |
           set -euo pipefail
           version="${TAG#v}"
-          ldflags="-s -w -X github.com/FlameInTheDark/needle-go.Version=${TAG}"
+          ldflags="-s -w -X github.com/FlameInTheDark/cactus-go.Version=${TAG}"
           targets=(
             linux/amd64
             linux/arm64
@@ -71,16 +71,16 @@ jobs:
           for target in "${targets[@]}"; do
             goos="${target%/*}"
             goarch="${target#*/}"
-            name="needle_${version}_${goos}_${goarch}"
-            bin="needle"
+            name="cactus_${version}_${goos}_${goarch}"
+            bin="cactus"
             if [ "${goos}" = "windows" ]; then
-              bin="needle.exe"
+              bin="cactus.exe"
             fi
             stage="dist/${name}"
             echo "::group::${goos}/${goarch}"
             mkdir -p "${stage}"
             CGO_ENABLED=0 GOOS="${goos}" GOARCH="${goarch}" \
-              go build -trimpath -ldflags "${ldflags}" -o "${stage}/${bin}" ./cmd/needle
+              go build -trimpath -ldflags "${ldflags}" -o "${stage}/${bin}" ./cmd/cactus
             cp README.md LICENSE "${stage}/"
             if [ "${goos}" = "windows" ]; then
               (cd dist && zip -q -r -9 "${name}.zip" "${name}")

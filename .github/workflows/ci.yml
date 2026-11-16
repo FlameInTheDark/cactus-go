@@ -56,24 +56,27 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      # The engine lives in ~/.cache/needle-go/v<gen>/<engine version>; the
-      # pinned engine version lives in fetch/platform.go, so hashing that
+      # The engine lives in ~/.cache/cactus/engine/<version>/<revision>; the
+      # pinned engine release lives in fetch/platform.go, so hashing that
       # file gives a cache key that rotates exactly when the pin changes.
       - name: Restore engine cache
         uses: actions/cache@v4
         with:
-          path: ~/.cache/needle-go
-          key: needle-engine-${{ runner.os }}-${{ hashFiles('fetch/platform.go') }}
+          path: ~/.cache/cactus
+          key: cactus-engine-${{ runner.os }}-${{ hashFiles('fetch/platform.go') }}
           restore-keys: |
-            needle-engine-${{ runner.os }}-
+            cactus-engine-${{ runner.os }}-
 
+      # The revision in the URL must match the needle3 pin in
+      # fetch/platform.go so the pre-downloaded archive is exactly what the
+      # tests expect.
       - name: Fetch base weights for the worker tests
         run: |
           mkdir -p build
-          curl -fL --retry 3 -o build/needle2.cact \
-            https://huggingface.co/Cactus-Compute/needle2/resolve/main/needle2.cact
+          curl -fL --retry 3 -o build/needle3.cact \
+            https://huggingface.co/Cactus-Compute/needle3/resolve/d6c7d6a2e9655505e0f8e23339356dd1705900eb/needle3.cact
 
       - name: Test
         env:
-          NEEDLE_TEST_WEIGHTS: ${{ github.workspace }}/build/needle2.cact
+          CACTUS_TEST_WEIGHTS: ${{ github.workspace }}/build/needle3.cact
         run: go test -race ./...
